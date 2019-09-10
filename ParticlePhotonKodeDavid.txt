@@ -1,0 +1,51 @@
+int firstPulse = 0;
+int secondPulse = 0;
+int PulseInterval = 0;
+int BPM = 0;
+int totalBeats = 0;
+
+void setup() {
+    // initialize the serial communication:
+    Serial.begin(9600);
+    Particle.subscribe("hook-response/David BPM monitor", myHandler, MY_DEVICES);
+    pinMode(D1, INPUT); // Setup for leads off detection LO +
+    pinMode(D0, INPUT); // Setup for leads off detection LO -
+}
+
+void myHandler(const char *event, const char *data) {
+  // Handle the integration response
+  
+}
+          
+
+void loop() {a
+  if((digitalRead(D1) == 1)||(digitalRead(D0) == 1)){
+    Particle.publish("error, are they plugged inn?");
+  }
+  
+  else if(analogRead(A0) >= 2180){
+      //Calculate the first pulse in millis for the math equation
+     if(firstPulse == 0){
+         firstPulse = millis();
+	 //Can be changed
+         delay(350);
+     }
+     else{
+         //Now that firstpulse has been calculated the loop will calculate the secondpulse in millis for the math equation
+         secondPulse = millis();
+         PulseInterval = secondPulse - firstPulse;
+         BPM = (1.0/PulseInterval) * 60.0 * 1000;
+         totalBeats++;
+         firstPulse = 0;
+         secondPulse = 0;
+         
+             if(totalBeats >= 5){
+                 //Beats per minute Estimate
+                 Particle.publish("David BPM", String(BPM), PRIVATE);
+                 totalBeats = 0;
+             }
+	//Can be changed
+         delay(400);
+     }
+  }
+}
